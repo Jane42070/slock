@@ -54,7 +54,7 @@ struct xrandr {
 
 Imlib_Image image;
 
-static void
+	static void
 die(const char *errstr, ...)
 {
 	va_list ap;
@@ -69,7 +69,7 @@ die(const char *errstr, ...)
 #include <fcntl.h>
 #include <linux/oom.h>
 
-static void
+	static void
 dontkillme(void)
 {
 	FILE *f;
@@ -84,14 +84,14 @@ dontkillme(void)
 	if (fclose(f)) {
 		if (errno == EACCES)
 			die("slock: unable to disable OOM killer. "
-			    "Make sure to suid or sgid slock.\n");
+					"Make sure to suid or sgid slock.\n");
 		else
 			die("slock: fclose %s: %s\n", oomfile, strerror(errno));
 	}
 }
 #endif
 
-static void
+	static void
 writemessage(Display *dpy, Window win, int screen)
 {
 	int len, line_len, width, height, s_width, s_height, i, j, k, tab_replace, tab_size;
@@ -114,7 +114,7 @@ writemessage(Display *dpy, Window win, int screen)
 	tab_size = 8 * XTextWidth(fontinfo, " ", 1);
 
 	XAllocNamedColor(dpy, DefaultColormap(dpy, screen),
-		 text_color, &color, &dummy);
+			text_color, &color, &dummy);
 
 	gr_values.font = fontinfo->fid;
 	gr_values.foreground = color.pixel;
@@ -126,6 +126,12 @@ writemessage(Display *dpy, Window win, int screen)
 	/*
 	 * Start formatting and drawing text
 	 */
+	// if (strcmp(message, "time") == 0) {
+	//     time_t tp;
+	//     struct tm *p;
+	//     time(&tp);
+	//     p = gmtime(&tp);
+	// }
 
 	len = strlen(message);
 
@@ -178,12 +184,12 @@ writemessage(Display *dpy, Window win, int screen)
 
 	/* xsi should not be NULL anyway if Xinerama is active, but to be safe */
 	if (XineramaIsActive(dpy) && xsi != NULL)
-			XFree(xsi);
+		XFree(xsi);
 }
 
 
 
-static const char *
+	static const char *
 gethash(void)
 {
 	const char *hash;
@@ -204,7 +210,7 @@ gethash(void)
 		struct spwd *sp;
 		if (!(sp = getspnam(pw->pw_name)))
 			die("slock: getspnam: cannot retrieve shadow entry. "
-			    "Make sure to suid or sgid slock.\n");
+					"Make sure to suid or sgid slock.\n");
 		hash = sp->sp_pwdp;
 	}
 #else
@@ -212,11 +218,11 @@ gethash(void)
 #ifdef __OpenBSD__
 		if (!(pw = getpwuid_shadow(getuid())))
 			die("slock: getpwnam_shadow: cannot retrieve shadow entry. "
-			    "Make sure to suid or sgid slock.\n");
+					"Make sure to suid or sgid slock.\n");
 		hash = pw->pw_passwd;
 #else
 		die("slock: getpwuid: cannot retrieve shadow entry. "
-		    "Make sure to suid or sgid slock.\n");
+				"Make sure to suid or sgid slock.\n");
 #endif /* __OpenBSD__ */
 	}
 #endif /* HAVE_SHADOW_H */
@@ -224,9 +230,9 @@ gethash(void)
 	return hash;
 }
 
-static void
+	static void
 readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
-       const char *hash)
+		const char *hash)
 {
 	XRRScreenChangeNotifyEvent *rre;
 	char buf[32], passwd[256], *inputhash;
@@ -251,49 +257,49 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 					ksym = (ksym - XK_KP_0) + XK_0;
 			}
 			if (IsFunctionKey(ksym) ||
-			    IsKeypadKey(ksym) ||
-			    IsMiscFunctionKey(ksym) ||
-			    IsPFKey(ksym) ||
-			    IsPrivateKeypadKey(ksym))
+					IsKeypadKey(ksym) ||
+					IsMiscFunctionKey(ksym) ||
+					IsPFKey(ksym) ||
+					IsPrivateKeypadKey(ksym))
 				continue;
 			switch (ksym) {
-			case XK_Return:
-				passwd[len] = '\0';
-				errno = 0;
-				if (!(inputhash = crypt(passwd, hash)))
-					fprintf(stderr, "slock: crypt: %s\n", strerror(errno));
-				else
-					running = !!strcmp(inputhash, hash);
-				if (running) {
-					XBell(dpy, 100);
-					failure = 1;
-				}
-				explicit_bzero(&passwd, sizeof(passwd));
-				len = 0;
-				break;
-			case XK_Escape:
-				explicit_bzero(&passwd, sizeof(passwd));
-				len = 0;
-				break;
-			case XK_BackSpace:
-				if (len)
-					passwd[--len] = '\0';
-				break;
-			default:
-				if (num && !iscntrl((int)buf[0]) &&
-				    (len + num < sizeof(passwd))) {
-					memcpy(passwd + len, buf, num);
-					len += num;
-				}
-				break;
+				case XK_Return:
+					passwd[len] = '\0';
+					errno = 0;
+					if (!(inputhash = crypt(passwd, hash)))
+						fprintf(stderr, "slock: crypt: %s\n", strerror(errno));
+					else
+						running = !!strcmp(inputhash, hash);
+					if (running) {
+						XBell(dpy, 100);
+						failure = 1;
+					}
+					explicit_bzero(&passwd, sizeof(passwd));
+					len = 0;
+					break;
+				case XK_Escape:
+					explicit_bzero(&passwd, sizeof(passwd));
+					len = 0;
+					break;
+				case XK_BackSpace:
+					if (len)
+						passwd[--len] = '\0';
+					break;
+				default:
+					if (num && !iscntrl((int)buf[0]) &&
+							(len + num < sizeof(passwd))) {
+						memcpy(passwd + len, buf, num);
+						len += num;
+					}
+					break;
 			}
 			color = len ? INPUT : ((failure || failonclear) ? FAILED : INIT);
 			if (running && oldc != color) {
 				for (screen = 0; screen < nscreens; screen++) {
-                    if(locks[screen]->bgmap)
-                        XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
-                    else
-                        XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
+					if(locks[screen]->bgmap)
+						XSetWindowBackgroundPixmap(dpy, locks[screen]->win, locks[screen]->bgmap);
+					else
+						XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
 					XClearWindow(dpy, locks[screen]->win);
 					writemessage(dpy, locks[screen]->win, screen);
 				}
@@ -304,12 +310,12 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			for (screen = 0; screen < nscreens; screen++) {
 				if (locks[screen]->win == rre->window) {
 					if (rre->rotation == RR_Rotate_90 ||
-					    rre->rotation == RR_Rotate_270)
+							rre->rotation == RR_Rotate_270)
 						XResizeWindow(dpy, locks[screen]->win,
-						              rre->height, rre->width);
+								rre->height, rre->width);
 					else
 						XResizeWindow(dpy, locks[screen]->win,
-						              rre->width, rre->height);
+								rre->width, rre->height);
 					XClearWindow(dpy, locks[screen]->win);
 					break;
 				}
@@ -321,7 +327,7 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 	}
 }
 
-static struct lock *
+	static struct lock *
 lockscreen(Display *dpy, struct xrandr *rr, int screen)
 {
 	char curs[] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -337,20 +343,20 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	lock->screen = screen;
 	lock->root = RootWindow(dpy, lock->screen);
 
-    if(image) 
-    {
-        lock->bgmap = XCreatePixmap(dpy, lock->root, DisplayWidth(dpy, lock->screen), DisplayHeight(dpy, lock->screen), DefaultDepth(dpy, lock->screen));
-        imlib_context_set_image(image);
-        imlib_context_set_display(dpy);
-        imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
-        imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
-        imlib_context_set_drawable(lock->bgmap);
-        imlib_render_image_on_drawable(0, 0);
-        imlib_free_image();
-    }
+	if(image) 
+	{
+		lock->bgmap = XCreatePixmap(dpy, lock->root, DisplayWidth(dpy, lock->screen), DisplayHeight(dpy, lock->screen), DefaultDepth(dpy, lock->screen));
+		imlib_context_set_image(image);
+		imlib_context_set_display(dpy);
+		imlib_context_set_visual(DefaultVisual(dpy, lock->screen));
+		imlib_context_set_colormap(DefaultColormap(dpy, lock->screen));
+		imlib_context_set_drawable(lock->bgmap);
+		imlib_render_image_on_drawable(0, 0);
+		imlib_free_image();
+	}
 	for (i = 0; i < NUMCOLS; i++) {
 		XAllocNamedColor(dpy, DefaultColormap(dpy, lock->screen),
-		                 colorname[i], &color, &dummy);
+				colorname[i], &color, &dummy);
 		lock->colors[i] = color.pixel;
 	}
 
@@ -358,30 +364,30 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	wa.override_redirect = 1;
 	wa.background_pixel = lock->colors[INIT];
 	lock->win = XCreateWindow(dpy, lock->root, 0, 0,
-	                          DisplayWidth(dpy, lock->screen),
-	                          DisplayHeight(dpy, lock->screen),
-	                          0, DefaultDepth(dpy, lock->screen),
-	                          CopyFromParent,
-	                          DefaultVisual(dpy, lock->screen),
-	                          CWOverrideRedirect | CWBackPixel, &wa);
-    if(lock->bgmap != 0)
+			DisplayWidth(dpy, lock->screen),
+			DisplayHeight(dpy, lock->screen),
+			0, DefaultDepth(dpy, lock->screen),
+			CopyFromParent,
+			DefaultVisual(dpy, lock->screen),
+			CWOverrideRedirect | CWBackPixel, &wa);
+	if(lock->bgmap != 0)
 		XSetWindowBackgroundPixmap(dpy, lock->win, lock->bgmap);
 	lock->pmap = XCreateBitmapFromData(dpy, lock->win, curs, 8, 8);
 	invisible = XCreatePixmapCursor(dpy, lock->pmap, lock->pmap,
-	                                &color, &color, 0, 0);
+			&color, &color, 0, 0);
 	XDefineCursor(dpy, lock->win, invisible);
 
 	/* Try to grab mouse pointer *and* keyboard for 600ms, else fail the lock */
 	for (i = 0, ptgrab = kbgrab = -1; i < 6; i++) {
 		if (ptgrab != GrabSuccess) {
 			ptgrab = XGrabPointer(dpy, lock->root, False,
-			                      ButtonPressMask | ButtonReleaseMask |
-			                      PointerMotionMask, GrabModeAsync,
-			                      GrabModeAsync, None, invisible, CurrentTime);
+					ButtonPressMask | ButtonReleaseMask |
+					PointerMotionMask, GrabModeAsync,
+					GrabModeAsync, None, invisible, CurrentTime);
 		}
 		if (kbgrab != GrabSuccess) {
 			kbgrab = XGrabKeyboard(dpy, lock->root, True,
-			                       GrabModeAsync, GrabModeAsync, CurrentTime);
+					GrabModeAsync, GrabModeAsync, CurrentTime);
 		}
 
 		/* input is grabbed: we can lock the screen */
@@ -396,7 +402,7 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 
 		/* retry on AlreadyGrabbed but fail on other errors */
 		if ((ptgrab != AlreadyGrabbed && ptgrab != GrabSuccess) ||
-		    (kbgrab != AlreadyGrabbed && kbgrab != GrabSuccess))
+				(kbgrab != AlreadyGrabbed && kbgrab != GrabSuccess))
 			break;
 
 		usleep(100000);
@@ -405,14 +411,14 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	/* we couldn't grab all input: fail out */
 	if (ptgrab != GrabSuccess)
 		fprintf(stderr, "slock: unable to grab mouse pointer for screen %d\n",
-		        screen);
+				screen);
 	if (kbgrab != GrabSuccess)
 		fprintf(stderr, "slock: unable to grab keyboard for screen %d\n",
-		        screen);
+				screen);
 	return NULL;
 }
 
-static void
+	static void
 usage(void)
 {
 	die("usage: slock [-v] [-f] [-m message] [cmd [arg ...]]\n");
@@ -433,34 +439,34 @@ main(int argc, char **argv) {
 	char **font_names;
 
 	ARGBEGIN {
-	case 'v':
-		fprintf(stderr, "slock-"VERSION"\n");
-		return 0;
-	case 'm':
-		message = EARGF(usage());
-		break;
-	case 'f':
-		if (!(dpy = XOpenDisplay(NULL)))
-			die("slock: cannot open display\n");
-		font_names = XListFonts(dpy, "*", 10000 /* list 10000 fonts*/, &count_fonts);
-		for (i=0; i<count_fonts; i++) {
-			fprintf(stderr, "%s\n", *(font_names+i));
-		}
-		return 0;
-	default:
-		usage();
+		case 'v':
+			fprintf(stderr, "slock-"VERSION"\n");
+			return 0;
+		case 'm':
+			message = EARGF(usage());
+			break;
+		case 'f':
+			if (!(dpy = XOpenDisplay(NULL)))
+				die("slock: cannot open display\n");
+			font_names = XListFonts(dpy, "*", 10000 /* list 10000 fonts*/, &count_fonts);
+			for (i=0; i<count_fonts; i++) {
+				fprintf(stderr, "%s\n", *(font_names+i));
+			}
+			return 0;
+		default:
+			usage();
 	} ARGEND
 
 	/* validate drop-user and -group */
 	errno = 0;
 	if (!(pwd = getpwnam(user)))
 		die("slock: getpwnam %s: %s\n", user,
-		    errno ? strerror(errno) : "user entry not found");
+				errno ? strerror(errno) : "user entry not found");
 	duid = pwd->pw_uid;
 	errno = 0;
 	if (!(grp = getgrnam(group)))
 		die("slock: getgrnam %s: %s\n", group,
-		    errno ? strerror(errno) : "group entry not found");
+				errno ? strerror(errno) : "group entry not found");
 	dgid = grp->gr_gid;
 
 #ifdef __linux__
@@ -502,7 +508,7 @@ main(int argc, char **argv) {
 	/*Pixelation*/
 	int width = scr->width;
 	int height = scr->height;
-	
+
 	for(int y = 0; y < height; y += pixelSize)
 	{
 		for(int x = 0; x < width; x += pixelSize)
@@ -534,8 +540,8 @@ main(int argc, char **argv) {
 			blue = 0;
 		}
 	}
-	
-	
+
+
 #endif
 	/* check for Xrandr support */
 	rr.active = XRRQueryExtension(dpy, &rr.evbase, &rr.errbase);
@@ -561,14 +567,14 @@ main(int argc, char **argv) {
 	/* run post-lock command */
 	if (argc > 0) {
 		switch (fork()) {
-		case -1:
-			die("slock: fork failed: %s\n", strerror(errno));
-		case 0:
-			if (close(ConnectionNumber(dpy)) < 0)
-				die("slock: close: %s\n", strerror(errno));
-			execvp(argv[0], argv);
-			fprintf(stderr, "slock: execvp %s: %s\n", argv[0], strerror(errno));
-			_exit(1);
+			case -1:
+				die("slock: fork failed: %s\n", strerror(errno));
+			case 0:
+				if (close(ConnectionNumber(dpy)) < 0)
+					die("slock: close: %s\n", strerror(errno));
+				execvp(argv[0], argv);
+				fprintf(stderr, "slock: execvp %s: %s\n", argv[0], strerror(errno));
+				_exit(1);
 		}
 	}
 
