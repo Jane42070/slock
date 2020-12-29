@@ -1,6 +1,6 @@
 /* user and group to drop privileges to */
-static const char *user  = "nobody";
-static const char *group = "nobody";
+static const char *user  = "root";
+static const char *group = "root";
 
 static const char *colorname[NUMCOLS] = {
 	[INIT] =   "black",     /* after initialization */
@@ -18,7 +18,8 @@ static const char * message = "Suckless: Software that sucks less.";
 static const char * text_color = "#FF652F";
 
 /* text size (must be a valid size) */
-static const char * font_name = "-misc-fixed-medium-r-semicondensed--13-100-100-100-c-60-iso8859-1";
+// static const char * font_name = "-adobe-*-*-r-*-*-34-*-*-*-*-*-*-*";
+static const char * font_name = "6x13";
 /*Enable blur*/
 #define BLUR
 /*Set blur radius*/
